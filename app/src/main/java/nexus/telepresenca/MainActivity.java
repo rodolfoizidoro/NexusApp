@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -35,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean conexao = false;
     private static String MAC = null;
     private UUID  uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    private SeekBar seekBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         btnDireita = (Button) findViewById(R.id.btnDireita);
         btnEsquerda = (Button) findViewById(R.id.btnEsquerda);
         btnStop = (Button) findViewById(R.id.btnStop);
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
 
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -91,35 +95,35 @@ public class MainActivity extends AppCompatActivity {
         btnFrente.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("F");
+                mConnectedThread.write("f");
             }
         });
 
         btnVoltar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("B");
+                mConnectedThread.write("b");
             }
         });
 
         btnDireita.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("R");
+                mConnectedThread.write("r");
             }
         });
 
         btnEsquerda.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("L");
+                mConnectedThread.write("l");
             }
         });
 
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("S");
+                mConnectedThread.write("s");
             }
         });
 
@@ -145,7 +149,10 @@ public class MainActivity extends AppCompatActivity {
                     MAC = data.getExtras().getString(ListaDispositivos.ENDERECO_MAC);
 
                     bluetoothDevice =  bluetoothAdapter.getRemoteDevice(MAC);
-
+                    byte[] pin;
+                    pin = ("1234").getBytes();
+            //        bluetoothDevice.setPin(pin);
+///
                     try{
                         bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
 
@@ -168,6 +175,25 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
 
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                String velocidade = String.valueOf(progress);
+
+                Toast.makeText(getApplicationContext(),"Velocidade: " + velocidade,Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
 
     }

@@ -8,7 +8,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Set;
 
@@ -18,7 +20,6 @@ import java.util.Set;
 public class ListaDispositivos extends ListActivity {
 
     private BluetoothAdapter bluetoothAdapter = null;
-
 
    public static String ENDERECO_MAC = null;
 
@@ -41,6 +42,7 @@ public class ListaDispositivos extends ListActivity {
             setListAdapter(ArrayBluetooth);
 
         }
+
 
     }
 
