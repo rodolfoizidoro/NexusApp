@@ -73,4 +73,12 @@
         android:layout_alignParentEnd="true"
         android:max="250"
         android:indeterminate="false" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Button"
+        android:id="@+id/btnServidor"
+        android:layout_below="@+id/seekBar"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

@@ -5,16 +5,30 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.database.sqlite.SQLiteException;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,12 +46,15 @@ public class MainActivity extends AppCompatActivity {
     private Button btnEsquerda;
     private Button btnDireita;
     private Button btnStop;
+    private Button btnServidor;
     private ConnectedThread mConnectedThread;
     private boolean conexao = false;
     private static String MAC = null;
     private UUID  uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     private SeekBar seekBar;
-
+    private String URL = "http://www.meucontatoapp.com/nexus/api/select.php";
+    ServiceStatus mService;
+    boolean mBound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,18 +68,27 @@ public class MainActivity extends AppCompatActivity {
         btnEsquerda = (Button) findViewById(R.id.btnEsquerda);
         btnStop = (Button) findViewById(R.id.btnStop);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
+        btnServidor = (Button) findViewById(R.id.btnServidor);
 
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if(bluetoothAdapter == null){
             Toast.makeText(getApplicationContext(),"Seu dispositivo não possui bluetooth.", Toast.LENGTH_LONG).show();
+            new SurveyDBAsyncTask().execute("");
         }
         else if(!bluetoothAdapter.isEnabled() ){
             Intent  intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(intent, SOLICITA_ATIVACAO);
 
         }
+
+        btnServidor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(),"Toast.", Toast.LENGTH_LONG).show();
+            }
+        });
 
         btnConexao.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -162,6 +188,8 @@ public class MainActivity extends AppCompatActivity {
                         btnConexao.setText("Desconectar");
                         mConnectedThread = new ConnectedThread(bluetoothSocket);
                         mConnectedThread.start();
+                    //    Intent intent = new Intent(this, ServiceStatus.class);
+                      //  startService(intent);
                     }
                     catch (IOException error){
                         conexao = false;
@@ -247,5 +275,82 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+
     }
+
+    //Create a new AsyncTask
+    private class SurveyDBAsyncTask extends AsyncTask<String, Void, Long>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        /**
+         * Override this method to perform a computation on a background thread. The
+         * specified parameters are the parameters passed to {@link #execute}
+         * by the caller of this task.
+         * <p/>
+         * This method can call {@link #publishProgress} to publish updates
+         * on the UI thread.
+         *
+         * @param params The parameters of the task.
+         * @return A result, defined by the subclass of this task.
+         * @see #onPreExecute()
+         * @see #onPostExecute
+         * @see #publishProgress
+         */
+        private TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        final RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+
+                        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                Log.v("TESTE",response);
+                                // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
+                                requestQueue.stop();
+
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+
+                            }
+                        });
+                        requestQueue.add(stringRequest);
+                    }
+                });
+
+
+            }
+        };
+
+
+        @Override
+        protected Long doInBackground(String... params) {
+            long id = 0;
+            try {
+
+               Timer timer = new Timer();
+                timer.schedule(timerTask,2000,5000);
+
+            }catch (SQLiteException e){
+            }
+            return id;
+        }
+
+        @Override
+        protected void onPostExecute(Long id) {
+            super.onPostExecute(id);
+
+        }
+    }
+
 }
