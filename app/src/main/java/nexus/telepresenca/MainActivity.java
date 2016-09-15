@@ -75,7 +75,8 @@ public class MainActivity extends AppCompatActivity {
 
         if(bluetoothAdapter == null){
             Toast.makeText(getApplicationContext(),"Seu dispositivo não possui bluetooth.", Toast.LENGTH_LONG).show();
-            new SurveyDBAsyncTask().execute("");
+            //new SurveyDBAsyncTask().execute("");
+
         }
         else if(!bluetoothAdapter.isEnabled() ){
             Intent  intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -188,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                         btnConexao.setText("Desconectar");
                         mConnectedThread = new ConnectedThread(bluetoothSocket);
                         mConnectedThread.start();
+                        new SurveyDBAsyncTask().execute("");
                     //    Intent intent = new Intent(this, ServiceStatus.class);
                       //  startService(intent);
                     }
@@ -313,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
                         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
-                                Log.v("TESTE",response);
+                                    mConnectedThread.write(response);
                                 // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
                                 requestQueue.stop();
 
@@ -339,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
             try {
 
                Timer timer = new Timer();
-                timer.schedule(timerTask,2000,5000);
+                timer.schedule(timerTask,2000,1000);
 
             }catch (SQLiteException e){
             }
