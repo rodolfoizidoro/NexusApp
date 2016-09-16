@@ -1,5 +1,6 @@
 package nexus.telepresenca;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -31,7 +32,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+import nexus.telepresenca.Util.PermissionUtils;
+import nexus.telepresenca.Video.HelloWorldActivity;
+
+public class MainActivity extends AppCompatActivity  {
 
     BluetoothAdapter bluetoothAdapter = null;
     BluetoothDevice bluetoothDevice = null;
@@ -55,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
     private String URL = "http://www.meucontatoapp.com/nexus/api/select.php";
     ServiceStatus mService;
     boolean mBound = false;
+    private PermissionUtils perm;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +75,16 @@ public class MainActivity extends AppCompatActivity {
         btnStop = (Button) findViewById(R.id.btnStop);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         btnServidor = (Button) findViewById(R.id.btnServidor);
+
+        String[] permissoes = new String[]{
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.CAMERA,
+                Manifest.permission.INTERNET,
+                Manifest.permission.MODIFY_AUDIO_SETTINGS,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        perm = new PermissionUtils();
+        perm.validate(this,0,permissoes);
 
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -87,7 +103,11 @@ public class MainActivity extends AppCompatActivity {
         btnServidor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Toast.", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(),"Toast.", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(MainActivity.this, HelloWorldActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
             }
         });
 

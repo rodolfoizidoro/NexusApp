@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Telepresenca</string>
+    <string name="notification">Ongoing call</string>
 </resources>

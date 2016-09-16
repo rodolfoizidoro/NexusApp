@@ -4,6 +4,11 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    
 
     <application
         android:allowBackup="true"
@@ -23,6 +28,21 @@
             android:theme="@android:style/Theme.Dialog"
             />
         <!--<service android:name=".ServiceStatus"/>-->
+        <service android:name=".Video.services.ClearNotificationService" android:exported="false" >
+            <intent-filter android:label="Notificacao" >
+                <action android:name="nexus.telepresenca.Video.services.ClearNotificationService" />
+            </intent-filter>
+        </service>
+        <activity
+            android:name=".Video.HelloWorldActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize" >
+            <intent-filter>
+                <action android:name="nexus.telepresenca.Video.OpenTokHelloWorld" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>
