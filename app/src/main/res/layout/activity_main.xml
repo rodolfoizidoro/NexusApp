@@ -14,7 +14,8 @@
         android:layout_height="wrap_content"
         android:text="Conectar"
         android:id="@+id/btnConectar"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
@@ -40,9 +41,8 @@
         android:layout_height="wrap_content"
         android:text="Direita"
         android:id="@+id/btnDireita"
-        android:layout_alignBottom="@+id/btnFrente"
-        android:layout_alignLeft="@+id/btnConectar"
-        android:layout_alignStart="@+id/btnConectar" />
+        android:layout_above="@+id/btnStop"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
@@ -61,24 +61,53 @@
         android:layout_toRightOf="@+id/btnConectar"
         android:layout_toEndOf="@+id/btnConectar" />
 
-    <SeekBar
+    <Button
+        style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/seekBar"
-        android:layout_below="@+id/btnVoltar"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="79dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:max="250"
-        android:indeterminate="false" />
+        android:text="Camera"
+        android:id="@+id/btnCamera"
+        android:layout_above="@+id/btnFrente"
+        android:layout_alignParentEnd="true" />
 
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fim"
+        android:id="@+id/btnFinalizarVideo"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/btnEsquerda" />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New Button"
+        android:text="Video"
         android:id="@+id/btnServidor"
-        android:layout_below="@+id/seekBar"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/btnEsquerda" />
+
+    <RelativeLayout
+        android:id="@+id/subscriberview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center_horizontal"
+        android:keepScreenOn="true">
+
+        <ProgressBar
+            android:id="@+id/loadingSpinner"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:indeterminate="false"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/publisherview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:keepScreenOn="true">
+    </RelativeLayout>
+
 </RelativeLayout>
