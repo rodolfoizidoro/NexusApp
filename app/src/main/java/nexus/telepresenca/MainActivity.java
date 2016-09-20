@@ -33,6 +33,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.crashlytics.android.Crashlytics;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -42,6 +43,7 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 
+import io.fabric.sdk.android.Fabric;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -54,10 +56,13 @@ import nexus.telepresenca.Util.PermissionUtils;
 import nexus.telepresenca.Video.HelloWorldActivity;
 import nexus.telepresenca.Video.config.OpenTokConfig;
 import nexus.telepresenca.Video.services.ClearNotificationService;
+import com.crashlytics.android.Crashlytics;
+import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity implements
         Session.SessionListener, Publisher.PublisherListener,
         Subscriber.VideoListener  {
+
 
     BluetoothAdapter bluetoothAdapter = null;
     BluetoothDevice bluetoothDevice = null;
@@ -110,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
 
         btnConexao = (Button) findViewById(R.id.btnConectar);
