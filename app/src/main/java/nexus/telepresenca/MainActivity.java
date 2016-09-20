@@ -204,12 +204,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
 
-        btnFrente.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mConnectedThread.write("f");
-            }
-        });
+
 
         btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -229,12 +224,17 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         });
-
+        btnFrente.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                comando("F");
+            }
+        });
         btnVoltar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //mConnectedThread.write("b");
-              //  comando("B");
+                comando("B");
             }
         });
 
@@ -242,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
               //  mConnectedThread.write("r");
-              //  comando("R");
+                comando("R");
             }
         });
 
@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 //mConnectedThread.write("l");
-           //     comando("L");
+               comando("L");
             }
         });
 
@@ -258,10 +258,31 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
               //  mConnectedThread.write("s");
-             //   comando("S");
+                comando("S");
             }
         });
 
+
+    }
+    private void comando (String direcao){
+        final RequestQueue requestQueue2 = Volley.newRequestQueue(getApplicationContext());
+        String urldirecao = URL2+"'"+direcao+"'";
+        StringRequest stringRequest2 = new StringRequest(Request.Method.POST,urldirecao , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                //mConnectedThread.write(response);
+                Log.i("Comandos",response);
+                // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
+                requestQueue2.stop();
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        requestQueue2.add(stringRequest2);
 
     }
 
@@ -731,27 +752,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
 
-
-//        private void comando (String direcao){
-//            final RequestQueue requestQueue2 = Volley.newRequestQueue(getApplicationContext());
-//            StringRequest stringRequest2 = new StringRequest(Request.Method.POST, URL2+"'"+direcao+"'", new Response.Listener<String>() {
-//                @Override
-//                public void onResponse(String response) {
-//                    //mConnectedThread.write(response);
-//                    Log.i("Comandos",response);
-//                    // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
-//                    requestQueue2.stop();
-//
-//                }
-//            }, new Response.ErrorListener() {
-//                @Override
-//                public void onErrorResponse(VolleyError error) {
-//
-//                }
-//            });
-//            requestQueue2.add(stringRequest2);
-//
-//        }
 
         @Override
         protected Long doInBackground(String... params) {
