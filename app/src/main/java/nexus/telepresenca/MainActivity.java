@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements
     private UUID  uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
   //  private SeekBar seekBar;
     private String URL = "http://www.meucontatoapp.com/nexus/api/select.php";
+    private String URL2 = "http://www.meucontatoapp.com/nexus/api/comandos.php?status=";
     ServiceStatus mService;
     boolean mBound = false;
     private PermissionUtils perm;
@@ -226,28 +227,32 @@ public class MainActivity extends AppCompatActivity implements
         btnVoltar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("b");
+                //mConnectedThread.write("b");
+              //  comando("B");
             }
         });
 
         btnDireita.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("r");
+              //  mConnectedThread.write("r");
+              //  comando("R");
             }
         });
 
         btnEsquerda.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("l");
+                //mConnectedThread.write("l");
+           //     comando("L");
             }
         });
 
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectedThread.write("s");
+              //  mConnectedThread.write("s");
+             //   comando("S");
             }
         });
 
@@ -720,6 +725,27 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
 
+
+//        private void comando (String direcao){
+//            final RequestQueue requestQueue2 = Volley.newRequestQueue(getApplicationContext());
+//            StringRequest stringRequest2 = new StringRequest(Request.Method.POST, URL2+"'"+direcao+"'", new Response.Listener<String>() {
+//                @Override
+//                public void onResponse(String response) {
+//                    //mConnectedThread.write(response);
+//                    Log.i("Comandos",response);
+//                    // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
+//                    requestQueue2.stop();
+//
+//                }
+//            }, new Response.ErrorListener() {
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//
+//                }
+//            });
+//            requestQueue2.add(stringRequest2);
+//
+//        }
 
         @Override
         protected Long doInBackground(String... params) {
