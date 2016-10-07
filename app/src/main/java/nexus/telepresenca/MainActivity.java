@@ -20,8 +20,10 @@ import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -44,6 +46,7 @@ import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 
 import io.fabric.sdk.android.Fabric;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -56,12 +59,14 @@ import nexus.telepresenca.Util.PermissionUtils;
 import nexus.telepresenca.Video.HelloWorldActivity;
 import nexus.telepresenca.Video.config.OpenTokConfig;
 import nexus.telepresenca.Video.services.ClearNotificationService;
+
 import com.crashlytics.android.Crashlytics;
+
 import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity implements
         Session.SessionListener, Publisher.PublisherListener,
-        Subscriber.VideoListener  {
+        Subscriber.VideoListener {
 
 
     BluetoothAdapter bluetoothAdapter = null;
@@ -70,19 +75,20 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final int SOLICITA_ATIVACAO = 1;
     private static final int SOLICITA_CONEXAO = 2;
+    private String comando = "S";
 
     private Button btnConexao;
-    private Button btnFrente;
-    private Button btnVoltar;
-    private Button btnEsquerda;
-    private Button btnDireita;
-    private Button btnStop;
+    private ImageView btnFrente;
+    private ImageView btnVoltar;
+    private ImageView btnEsquerda;
+    private ImageView btnDireita;
+    private ImageView btnStop;
     private Button btnServidor;
     private ConnectedThread mConnectedThread;
     private boolean conexao = false;
     private static String MAC = null;
-    private UUID  uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-  //  private SeekBar seekBar;
+    private UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    //  private SeekBar seekBar;
     private String URL = "http://www.meucontatoapp.com/nexus/api/select.php";
     private String URL2 = "http://www.meucontatoapp.com/nexus/api/comandos.php?status=";
     ServiceStatus mService;
@@ -112,6 +118,11 @@ public class MainActivity extends AppCompatActivity implements
     private Timer timer;
     private Button btnFinalizarVideo;
 
+    private Button btnVelocidade1;
+    private Button btnVelocidade3;
+    private Button btnVelocidade4;
+    private Button btnAlterarCameraRemoto;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,14 +130,18 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
 
         btnConexao = (Button) findViewById(R.id.btnConectar);
-        btnFrente = (Button) findViewById(R.id.btnFrente);
-        btnVoltar = (Button) findViewById(R.id.btnVoltar);
-        btnDireita = (Button) findViewById(R.id.btnDireita);
-        btnEsquerda = (Button) findViewById(R.id.btnEsquerda);
-        btnStop = (Button) findViewById(R.id.btnStop);
+        btnFrente = (ImageView) findViewById(R.id.btnFrente);
+        btnVoltar = (ImageView) findViewById(R.id.btnVoltar);
+        btnDireita = (ImageView) findViewById(R.id.btnDireita);
+        btnEsquerda = (ImageView) findViewById(R.id.btnEsquerda);
+        btnStop = (ImageView) findViewById(R.id.btnStop);
         btnServidor = (Button) findViewById(R.id.btnServidor);
         btnCamera = (Button) findViewById(R.id.btnCamera);
         btnFinalizarVideo = (Button) findViewById(R.id.btnFinalizarVideo);
+        btnVelocidade1 = (Button) findViewById(R.id.btnVelocidade1);
+        btnVelocidade3 = (Button) findViewById(R.id.btnVelocidade3);
+        btnVelocidade4 = (Button) findViewById(R.id.btnvelocidade4);
+        btnAlterarCameraRemoto = (Button) findViewById(R.id.btnAlterarCameraRemoto);
 
         String[] permissoes = new String[]{
                 Manifest.permission.RECORD_AUDIO,
@@ -136,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
         };
         perm = new PermissionUtils();
-        perm.validate(this,0,permissoes);
+        perm.validate(this, 0, permissoes);
 
 
         mPublisherViewContainer = (RelativeLayout) findViewById(R.id.publisherview);
@@ -147,17 +162,16 @@ public class MainActivity extends AppCompatActivity implements
 
         mStreams = new ArrayList<Stream>();
 
-      //  sessionConnect();
+        //  sessionConnect();
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        if(bluetoothAdapter == null){
-            Toast.makeText(getApplicationContext(),"Seu dispositivo não possui bluetooth.", Toast.LENGTH_LONG).show();
+        if (bluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "Seu dispositivo não possui bluetooth.", Toast.LENGTH_LONG).show();
             //new SurveyDBAsyncTask().execute("");
 
-        }
-        else if(!bluetoothAdapter.isEnabled() ){
-            Intent  intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        } else if (!bluetoothAdapter.isEnabled()) {
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(intent, SOLICITA_ATIVACAO);
 
         }
@@ -180,30 +194,35 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
 
-                if(conexao){
+                if (conexao) {
                     //desconectar
-                    try{
+                    try {
+                        if (surveyDBAsyncTask != null)
+                            surveyDBAsyncTask.cancel(true);
+                        if (timer != null) {
+                            timer.cancel();
+                            timer.purge();
+                        }
                         conexao = false;
                         bluetoothSocket.close();
-                        Toast.makeText(getApplicationContext(),"Bleutooth desconectado.", Toast.LENGTH_LONG).show();
-                        btnConexao.setText("Conectar");
+
+                        Toast.makeText(getApplicationContext(), "Bleutooth desconectado.", Toast.LENGTH_LONG).show();
+                      //  btnConexao.setText("Conectar");
+                        btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_cyan_a400_36dp);
                         mConnectedThread.currentThread().stop();
-                    }
-                    catch (IOException error){
-                        Toast.makeText(getApplicationContext(),"Erro ao desconetar : " + error, Toast.LENGTH_LONG).show();
+                    } catch (IOException error) {
+                        Toast.makeText(getApplicationContext(), "Erro ao desconetar : " + error, Toast.LENGTH_LONG).show();
                     }
 
-                }
-                else {
+                } else {
                     //conectar
 
-                    Intent abreLista = new Intent(MainActivity.this,ListaDispositivos.class);
-                    startActivityForResult(abreLista,SOLICITA_CONEXAO);
+                    Intent abreLista = new Intent(MainActivity.this, ListaDispositivos.class);
+                    startActivityForResult(abreLista, SOLICITA_CONEXAO);
                 }
 
             }
         });
-
 
 
         btnCamera.setOnClickListener(new View.OnClickListener() {
@@ -215,63 +234,159 @@ public class MainActivity extends AppCompatActivity implements
         btnFinalizarVideo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                surveyDBAsyncTask.cancel(true);
-                timer.cancel();
-                timer.purge();
+                if (surveyDBAsyncTask != null)
+                    surveyDBAsyncTask.cancel(true);
+                if (timer != null) {
+                    timer.cancel();
+                    timer.purge();
+                }
 
                 if (mSession != null) {
                     mSession.disconnect();
                 }
             }
         });
-        btnFrente.setOnClickListener(new View.OnClickListener() {
+
+        btnFrente.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-                comando("F");
-            }
-        });
-        btnVoltar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //mConnectedThread.write("b");
-                comando("B");
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                    comando("F");
+                    return true;
+                }
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    comando("S");
+                    return true;
+                }
+
+
+                return false;
             }
         });
 
-        btnDireita.setOnClickListener(new View.OnClickListener() {
+        btnDireita.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-              //  mConnectedThread.write("r");
-                comando("R");
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                    comando("R");
+                    return true;
+                }
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    comando("S");
+                    return true;
+                }
+
+
+                return false;
             }
         });
 
-        btnEsquerda.setOnClickListener(new View.OnClickListener() {
+        btnEsquerda.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-                //mConnectedThread.write("l");
-               comando("L");
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                    comando("L");
+                    return true;
+                }
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    comando("S");
+                    return true;
+                }
+
+
+                return false;
             }
         });
 
+        btnVoltar.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                    comando("B");
+                    return true;
+                }
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    comando("S");
+                    return true;
+                }
+
+
+                return false;
+            }
+        });
+
+
+
+
+        btnVelocidade1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            //    btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_disabled_light_blue_600_36dp);
+               // comando("F");
+            }
+        });
+        btnVelocidade3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               // comando("F");
+            }
+        });
+        btnVelocidade4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+              //  comando("F");
+            }
+        });
+        btnAlterarCameraRemoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                comando("X");
+            }
+        });
+//        btnVoltar.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //mConnectedThread.write("b");
+//                comando("B");
+//            }
+//        });
+//
+//        btnDireita.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //  mConnectedThread.write("r");
+//                comando("R");
+//            }
+//        });
+//
+//        btnEsquerda.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                //mConnectedThread.write("l");
+//                comando("L");
+//            }
+//        });
+//
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-              //  mConnectedThread.write("s");
-                comando("S");
+                //  mConnectedThread.write("s");
+                comando("X");
             }
         });
 
 
     }
-    private void comando (String direcao){
+
+    private void comando(String direcao) {
         final RequestQueue requestQueue2 = Volley.newRequestQueue(getApplicationContext());
-        String urldirecao = URL2+"'"+direcao+"'";
-        StringRequest stringRequest2 = new StringRequest(Request.Method.POST,urldirecao , new Response.Listener<String>() {
+        String urldirecao = URL2 + "'" + direcao + "'";
+        StringRequest stringRequest2 = new StringRequest(Request.Method.POST, urldirecao, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+                if(response != null)
                 //mConnectedThread.write(response);
-                Log.i("Comandos",response);
+                Log.i("Comandos", response);
                 // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
                 requestQueue2.stop();
 
@@ -364,6 +479,7 @@ public class MainActivity extends AppCompatActivity implements
             mPublisher.swapCamera();
         }
     }
+
     @Override
     public void onStop() {
         super.onStop();
@@ -400,6 +516,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onDestroy();
         finish();
     }
+
     private void sessionConnect() {
         if (mSession == null) {
             mSession = new Session(MainActivity.this,
@@ -594,53 +711,49 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode){
+        switch (requestCode) {
             case SOLICITA_ATIVACAO:
-                if(resultCode == Activity.RESULT_OK){
-                    Toast.makeText(getApplicationContext(),"O bluetooth foi ativado.", Toast.LENGTH_LONG).show();
-                }
-                else {
-                    Toast.makeText(getApplicationContext(),"O bluetooth não foi ativado.", Toast.LENGTH_LONG).show();
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(getApplicationContext(), "O bluetooth foi ativado.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "O bluetooth não foi ativado.", Toast.LENGTH_LONG).show();
                     //finish();
                 }
                 break;
             case SOLICITA_CONEXAO:
-                if(resultCode == Activity.RESULT_OK){
+                if (resultCode == Activity.RESULT_OK) {
 
                     MAC = data.getExtras().getString(ListaDispositivos.ENDERECO_MAC);
 
-                    bluetoothDevice =  bluetoothAdapter.getRemoteDevice(MAC);
+                    bluetoothDevice = bluetoothAdapter.getRemoteDevice(MAC);
                     byte[] pin;
                     pin = ("1234").getBytes();
-            //        bluetoothDevice.setPin(pin);
+                    //        bluetoothDevice.setPin(pin);
 ///
-                    try{
+                    try {
                         bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
 
                         bluetoothSocket.connect();
-                        Toast.makeText(getApplicationContext(),"Conectado com MAC: " + MAC, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Conectado com MAC: " + MAC, Toast.LENGTH_LONG).show();
                         conexao = true;
-                        btnConexao.setText("Desconectar");
+                        //btnConexao.setText("Desconectar");
+                        btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_disabled_light_blue_600_36dp);
                         mConnectedThread = new ConnectedThread(bluetoothSocket);
                         mConnectedThread.start();
-                        surveyDBAsyncTask=   new SurveyDBAsyncTask();
+                        surveyDBAsyncTask = new SurveyDBAsyncTask();
                         surveyDBAsyncTask.execute("");
-                    //    Intent intent = new Intent(this, ServiceStatus.class);
-                      //  startService(intent);
-                    }
-                    catch (IOException error){
+                        //    Intent intent = new Intent(this, ServiceStatus.class);
+                        //  startService(intent);
+                    } catch (IOException error) {
                         conexao = false;
-                        Toast.makeText(getApplicationContext(),"Erro ao conectar : " + error, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Erro ao conectar : " + error, Toast.LENGTH_LONG).show();
                     }
-                }
-                else {
-                    Toast.makeText(getApplicationContext(),"Falha ao obter o MAC.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Falha ao obter o MAC.", Toast.LENGTH_LONG).show();
                     //finish();
                 }
                 break;
         }
-
-
 
 
     }
@@ -659,7 +772,8 @@ public class MainActivity extends AppCompatActivity implements
                 //Create I/O streams for connection
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
@@ -682,6 +796,7 @@ public class MainActivity extends AppCompatActivity implements
 //                }
 //            }
         }
+
         //write method
         public void write(String input) {
             byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
@@ -698,7 +813,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     //Create a new AsyncTask
-    private class SurveyDBAsyncTask extends AsyncTask<String, Void, Long>{
+    private class SurveyDBAsyncTask extends AsyncTask<String, Void, Long> {
 
         @Override
         protected void onPreExecute() {
@@ -732,8 +847,23 @@ public class MainActivity extends AppCompatActivity implements
                         StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
+                                if (response != null && response.equals("X") && !comando.equals("X") ) {
+                                    onSwapCamera();
+                                    comando = response;
+                                    mConnectedThread.write("S");
+                                    Log.i("Comandos", "Trocou camera");
+                                    Log.i("Comandos", comando);
+
+                                } else if (response != null && !response.equals("X") ) {
+                                    comando = response;
                                     mConnectedThread.write(response);
-                                  // Log.i("Comandos",response);
+                                    Log.i("Comandos", comando);
+                                } else if (!comando.equals("X")) {
+                                    Log.i("Comandos", comando);
+                                    mConnectedThread.write(comando);
+                                }
+                               // mConnectedThread.write(response);
+                                // Log.i("Comandos",response);
                                 // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
                                 requestQueue.stop();
 
@@ -758,10 +888,10 @@ public class MainActivity extends AppCompatActivity implements
             long id = 0;
             try {
                 timer = new Timer();
-                timer.schedule(timerTask,2000,1000);
+                timer.schedule(timerTask, 2000, 600);
 
 
-            }catch (SQLiteException e){
+            } catch (SQLiteException e) {
             }
 
             return id;
