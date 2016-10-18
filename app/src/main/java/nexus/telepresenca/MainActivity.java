@@ -11,12 +11,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.database.sqlite.SQLiteException;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -26,16 +23,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.crashlytics.android.Crashlytics;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -45,24 +40,18 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 
-import io.fabric.sdk.android.Fabric;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
+import io.fabric.sdk.android.Fabric;
 import nexus.telepresenca.Util.PermissionUtils;
 import nexus.telepresenca.Video.HelloWorldActivity;
 import nexus.telepresenca.Video.config.OpenTokConfig;
 import nexus.telepresenca.Video.services.ClearNotificationService;
-
-import com.crashlytics.android.Crashlytics;
-
-import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends AppCompatActivity implements
         Session.SessionListener, Publisher.PublisherListener,
@@ -103,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private RelativeLayout mPublisherViewContainer;
     private RelativeLayout mSubscriberViewContainer;
-    private SurveyDBAsyncTask surveyDBAsyncTask;
+   // private SurveyDBAsyncTask surveyDBAsyncTask;
 
     // Spinning wheel for loading subscriber view
     private ProgressBar mLoadingSub;
@@ -122,6 +111,9 @@ public class MainActivity extends AppCompatActivity implements
     private Button btnVelocidade3;
     private Button btnVelocidade4;
     private Button btnAlterarCameraRemoto;
+
+    private DatabaseReference firebasereferencia = FirebaseDatabase.getInstance().getReference();
+    private Boolean threadLigada = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,8 +189,8 @@ public class MainActivity extends AppCompatActivity implements
                 if (conexao) {
                     //desconectar
                     try {
-                        if (surveyDBAsyncTask != null)
-                            surveyDBAsyncTask.cancel(true);
+//                        if (surveyDBAsyncTask != null)
+//                            surveyDBAsyncTask.cancel(true);
                         if (timer != null) {
                             timer.cancel();
                             timer.purge();
@@ -207,8 +199,9 @@ public class MainActivity extends AppCompatActivity implements
                         bluetoothSocket.close();
 
                         Toast.makeText(getApplicationContext(), "Bleutooth desconectado.", Toast.LENGTH_LONG).show();
-                      //  btnConexao.setText("Conectar");
+                        //  btnConexao.setText("Conectar");
                         btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_cyan_a400_36dp);
+                        threadLigada = false;
                         mConnectedThread.currentThread().stop();
                     } catch (IOException error) {
                         Toast.makeText(getApplicationContext(), "Erro ao desconetar : " + error, Toast.LENGTH_LONG).show();
@@ -234,8 +227,8 @@ public class MainActivity extends AppCompatActivity implements
         btnFinalizarVideo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (surveyDBAsyncTask != null)
-                    surveyDBAsyncTask.cancel(true);
+//                if (surveyDBAsyncTask != null)
+//                    surveyDBAsyncTask.cancel(true);
                 if (timer != null) {
                     timer.cancel();
                     timer.purge();
@@ -250,11 +243,11 @@ public class MainActivity extends AppCompatActivity implements
         btnFrente.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     comando("F");
                     return true;
                 }
-                if(event.getAction() == MotionEvent.ACTION_UP){
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     comando("S");
                     return true;
                 }
@@ -267,11 +260,11 @@ public class MainActivity extends AppCompatActivity implements
         btnDireita.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     comando("R");
                     return true;
                 }
-                if(event.getAction() == MotionEvent.ACTION_UP){
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     comando("S");
                     return true;
                 }
@@ -284,11 +277,11 @@ public class MainActivity extends AppCompatActivity implements
         btnEsquerda.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     comando("L");
                     return true;
                 }
-                if(event.getAction() == MotionEvent.ACTION_UP){
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     comando("S");
                     return true;
                 }
@@ -301,11 +294,11 @@ public class MainActivity extends AppCompatActivity implements
         btnVoltar.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN ){
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     comando("B");
                     return true;
                 }
-                if(event.getAction() == MotionEvent.ACTION_UP){
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     comando("S");
                     return true;
                 }
@@ -316,25 +309,23 @@ public class MainActivity extends AppCompatActivity implements
         });
 
 
-
-
         btnVelocidade1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            //    btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_disabled_light_blue_600_36dp);
-               // comando("F");
+                //    btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_disabled_light_blue_600_36dp);
+                 comando("1");
             }
         });
         btnVelocidade3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               // comando("F");
+                 comando("3");
             }
         });
         btnVelocidade4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-              //  comando("F");
+                  comando("5");
             }
         });
         btnAlterarCameraRemoto.setOnClickListener(new View.OnClickListener() {
@@ -343,30 +334,7 @@ public class MainActivity extends AppCompatActivity implements
                 comando("X");
             }
         });
-//        btnVoltar.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //mConnectedThread.write("b");
-//                comando("B");
-//            }
-//        });
-//
-//        btnDireita.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //  mConnectedThread.write("r");
-//                comando("R");
-//            }
-//        });
-//
-//        btnEsquerda.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //mConnectedThread.write("l");
-//                comando("L");
-//            }
-//        });
-//
+
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -375,31 +343,73 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
 
-
-    }
-
-    private void comando(String direcao) {
-        final RequestQueue requestQueue2 = Volley.newRequestQueue(getApplicationContext());
-        String urldirecao = URL2 + "'" + direcao + "'";
-        StringRequest stringRequest2 = new StringRequest(Request.Method.POST, urldirecao, new Response.Listener<String>() {
+        firebasereferencia.child("command").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onResponse(String response) {
-                if(response != null)
-                //mConnectedThread.write(response);
-                Log.i("Comandos", response);
-                // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
-                requestQueue2.stop();
-
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                EnviaArduino(dataSnapshot.getValue().toString());
+                Log.d("COmando", dataSnapshot.getValue().toString());
             }
-        }, new Response.ErrorListener() {
+
             @Override
-            public void onErrorResponse(VolleyError error) {
+            public void onCancelled(DatabaseError databaseError) {
 
             }
         });
-        requestQueue2.add(stringRequest2);
+
 
     }
+
+//    private void comando(String direcao) {
+//        final RequestQueue requestQueue2 = Volley.newRequestQueue(getApplicationContext());
+//        String urldirecao = URL2 + "'" + direcao + "'";
+//        StringRequest stringRequest2 = new StringRequest(Request.Method.POST, urldirecao, new Response.Listener<String>() {
+//            @Override
+//            public void onResponse(String response) {
+//                if(response != null)
+//                //mConnectedThread.write(response);
+//                Log.i("Comandos", response);
+//                // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
+//                requestQueue2.stop();
+//
+//            }
+//        }, new Response.ErrorListener() {
+//            @Override
+//            public void onErrorResponse(VolleyError error) {
+//
+//            }
+//        });
+//        requestQueue2.add(stringRequest2);
+//
+//    }
+
+    public void comando(String direcao) {
+
+        firebasereferencia.child("command").setValue(direcao);
+
+    }
+
+
+    public void EnviaArduino(String c) {
+
+        if (mConnectedThread != null && threadLigada) {
+            if (c != null && c.equals("X") && !comando.equals("X")) {
+                onSwapCamera();
+                comando = c;
+                mConnectedThread.write("S");
+                Log.i("Comandos", "Trocou camera");
+                Log.i("Comandos", comando);
+
+            } else if (c != null && !c.equals("X")) {
+                comando = c;
+                mConnectedThread.write(c);
+                Log.i("Comandos", comando);
+            } else if (!comando.equals("X")) {
+                Log.i("Comandos", comando);
+                mConnectedThread.write(comando);
+            }
+        }
+    }
+
 
     @Override
     public void onPause() {
@@ -740,8 +750,9 @@ public class MainActivity extends AppCompatActivity implements
                         btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_disabled_light_blue_600_36dp);
                         mConnectedThread = new ConnectedThread(bluetoothSocket);
                         mConnectedThread.start();
-                        surveyDBAsyncTask = new SurveyDBAsyncTask();
-                        surveyDBAsyncTask.execute("");
+                        threadLigada = true;
+//                        surveyDBAsyncTask = new SurveyDBAsyncTask();
+//                        surveyDBAsyncTask.execute("");
                         //    Intent intent = new Intent(this, ServiceStatus.class);
                         //  startService(intent);
                     } catch (IOException error) {
@@ -813,95 +824,95 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     //Create a new AsyncTask
-    private class SurveyDBAsyncTask extends AsyncTask<String, Void, Long> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        /**
-         * Override this method to perform a computation on a background thread. The
-         * specified parameters are the parameters passed to {@link #execute}
-         * by the caller of this task.
-         * <p/>
-         * This method can call {@link #publishProgress} to publish updates
-         * on the UI thread.
-         *
-         * @param params The parameters of the task.
-         * @return A result, defined by the subclass of this task.
-         * @see #onPreExecute()
-         * @see #onPostExecute
-         * @see #publishProgress
-         */
-        private TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        final RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-
-                        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                if (response != null && response.equals("X") && !comando.equals("X") ) {
-                                    onSwapCamera();
-                                    comando = response;
-                                    mConnectedThread.write("S");
-                                    Log.i("Comandos", "Trocou camera");
-                                    Log.i("Comandos", comando);
-
-                                } else if (response != null && !response.equals("X") ) {
-                                    comando = response;
-                                    mConnectedThread.write(response);
-                                    Log.i("Comandos", comando);
-                                } else if (!comando.equals("X")) {
-                                    Log.i("Comandos", comando);
-                                    mConnectedThread.write(comando);
-                                }
-                               // mConnectedThread.write(response);
-                                // Log.i("Comandos",response);
-                                // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
-                                requestQueue.stop();
-
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-
-                            }
-                        });
-                        requestQueue.add(stringRequest);
-                    }
-                });
-
-
-            }
-        };
-
-
-        @Override
-        protected Long doInBackground(String... params) {
-            long id = 0;
-            try {
-                timer = new Timer();
-                timer.schedule(timerTask, 2000, 600);
-
-
-            } catch (SQLiteException e) {
-            }
-
-            return id;
-        }
-
-        @Override
-        protected void onPostExecute(Long id) {
-            super.onPostExecute(id);
-
-        }
-    }
+//    private class SurveyDBAsyncTask extends AsyncTask<String, Void, Long> {
+//
+//        @Override
+//        protected void onPreExecute() {
+//            super.onPreExecute();
+//        }
+//
+//        /**
+//         * Override this method to perform a computation on a background thread. The
+//         * specified parameters are the parameters passed to {@link #execute}
+//         * by the caller of this task.
+//         * <p/>
+//         * This method can call {@link #publishProgress} to publish updates
+//         * on the UI thread.
+//         *
+//         * @param params The parameters of the task.
+//         * @return A result, defined by the subclass of this task.
+//         * @see #onPreExecute()
+//         * @see #onPostExecute
+//         * @see #publishProgress
+//         */
+//        private TimerTask timerTask = new TimerTask() {
+//            @Override
+//            public void run() {
+//
+//                Handler handler = new Handler(Looper.getMainLooper());
+//                handler.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        final RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+//
+//                        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+//                            @Override
+//                            public void onResponse(String response) {
+//                                if (response != null && response.equals("X") && !comando.equals("X")) {
+//                                    onSwapCamera();
+//                                    comando = response;
+//                                    mConnectedThread.write("S");
+//                                    Log.i("Comandos", "Trocou camera");
+//                                    Log.i("Comandos", comando);
+//
+//                                } else if (response != null && !response.equals("X")) {
+//                                    comando = response;
+//                                    mConnectedThread.write(response);
+//                                    Log.i("Comandos", comando);
+//                                } else if (!comando.equals("X")) {
+//                                    Log.i("Comandos", comando);
+//                                    mConnectedThread.write(comando);
+//                                }
+//                                // mConnectedThread.write(response);
+//                                // Log.i("Comandos",response);
+//                                // Toast.makeText(getApplicationContext(),response,Toast.LENGTH_LONG).show();
+//                                requestQueue.stop();
+//
+//                            }
+//                        }, new Response.ErrorListener() {
+//                            @Override
+//                            public void onErrorResponse(VolleyError error) {
+//
+//                            }
+//                        });
+//                        requestQueue.add(stringRequest);
+//                    }
+//                });
+//
+//
+//            }
+//        };
+//
+//
+//        @Override
+//        protected Long doInBackground(String... params) {
+//            long id = 0;
+//            try {
+//                timer = new Timer();
+//                timer.schedule(timerTask, 2000, 600);
+//
+//
+//            } catch (SQLiteException e) {
+//            }
+//
+//            return id;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Long id) {
+//            super.onPostExecute(id);
+//
+//        }
+//    }
 
 }

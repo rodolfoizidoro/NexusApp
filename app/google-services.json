@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "462038242984",
+    "firebase_url": "https://nexustelepresenca.firebaseio.com",
+    "project_id": "nexustelepresenca",
+    "storage_bucket": "nexustelepresenca.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462038242984:android:c0d1a6db37bd47ec",
+        "android_client_info": {
+          "package_name": "nexus.telepresenca"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "462038242984-6ro037o7mmb8rbiurv6575rostuqu4iu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDML-3csDHvV-zlD8wMKK6m3cdYhM9ciik"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
