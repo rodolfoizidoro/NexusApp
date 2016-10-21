@@ -115,26 +115,11 @@ public class MainActivity extends AppCompatActivity implements
     private DatabaseReference firebasereferencia = FirebaseDatabase.getInstance().getReference();
     private Boolean threadLigada = false;
 
-    private  InputStream mmInStream;
-    private  OutputStream mmOutStream;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_main);
-
-        Intent i = getIntent();
-
-        Bundle bundle = i.getExtras();
-
-        String selecao = bundle.getString("selecao");
-
-
-
-
-
-
 
         btnConexao = (Button) findViewById(R.id.btnConectar);
         btnFrente = (ImageView) findViewById(R.id.btnFrente);
@@ -149,8 +134,6 @@ public class MainActivity extends AppCompatActivity implements
         btnVelocidade3 = (Button) findViewById(R.id.btnVelocidade3);
         btnVelocidade4 = (Button) findViewById(R.id.btnvelocidade4);
         btnAlterarCameraRemoto = (Button) findViewById(R.id.btnAlterarCameraRemoto);
-
-        selecao(selecao);
 
         String[] permissoes = new String[]{
                 Manifest.permission.RECORD_AUDIO,
@@ -175,17 +158,16 @@ public class MainActivity extends AppCompatActivity implements
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        if(selecao.equalsIgnoreCase("controlador")) {
-            if (bluetoothAdapter == null) {
-                Toast.makeText(getApplicationContext(), "Seu dispositivo não possui bluetooth.", Toast.LENGTH_LONG).show();
-                //new SurveyDBAsyncTask().execute("");
+        if (bluetoothAdapter == null) {
+            Toast.makeText(getApplicationContext(), "Seu dispositivo não possui bluetooth.", Toast.LENGTH_LONG).show();
+            //new SurveyDBAsyncTask().execute("");
 
-            } else if (!bluetoothAdapter.isEnabled()) {
-                Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(intent, SOLICITA_ATIVACAO);
+        } else if (!bluetoothAdapter.isEnabled()) {
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(intent, SOLICITA_ATIVACAO);
 
-            }
         }
+
         btnServidor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -214,16 +196,13 @@ public class MainActivity extends AppCompatActivity implements
                             timer.purge();
                         }
                         conexao = false;
-                        if(bluetoothSocket != null)
                         bluetoothSocket.close();
 
                         Toast.makeText(getApplicationContext(), "Bleutooth desconectado.", Toast.LENGTH_LONG).show();
                         //  btnConexao.setText("Conectar");
                         btnConexao.setBackgroundResource(R.drawable.ic_bluetooth_cyan_a400_36dp);
-                        if(threadLigada){
                         threadLigada = false;
-                        mConnectedThread.currentThread().interrupt();
-                         }
+                        mConnectedThread.currentThread().stop();
                     } catch (IOException error) {
                         Toast.makeText(getApplicationContext(), "Erro ao desconetar : " + error, Toast.LENGTH_LONG).show();
                     }
@@ -368,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 EnviaArduino(dataSnapshot.getValue().toString());
-                Log.d("Firebase", dataSnapshot.getValue().toString());
+                Log.d("COmando", dataSnapshot.getValue().toString());
             }
 
             @Override
@@ -409,71 +388,26 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    public void selecao(String selecao){
-
-        if(selecao.equalsIgnoreCase("cliente"))
-        {
-            btnConexao.setVisibility(View.INVISIBLE);
-        }
-        else{
-            btnVelocidade1.setVisibility(View.INVISIBLE);
-            btnVelocidade3.setVisibility(View.INVISIBLE);
-            btnVelocidade4.setVisibility(View.INVISIBLE);
-            btnFrente.setVisibility(View.INVISIBLE);
-            btnVoltar.setVisibility(View.INVISIBLE);
-
-            btnDireita.setVisibility(View.INVISIBLE);
-            btnEsquerda.setVisibility(View.INVISIBLE);
-
-            btnAlterarCameraRemoto.setVisibility(View.INVISIBLE);
-
-        }
-
-    }
-
 
     public void EnviaArduino(String c) {
-
 
         if (mConnectedThread != null && threadLigada) {
             if (c != null && c.equals("X") && !comando.equals("X")) {
                 onSwapCamera();
                 comando = c;
-               // mConnectedThread.write("S");
-                write2("S");
+                mConnectedThread.write("S");
                 Log.i("Comandos", "Trocou camera");
                 Log.i("Comandos", comando);
 
             } else if (c != null && !c.equals("X")) {
                 comando = c;
-                //mConnectedThread.write(c);
-                write2(c);
+                mConnectedThread.write(c);
                 Log.i("Comandos", comando);
             } else if (!comando.equals("X")) {
                 Log.i("Comandos", comando);
-               // mConnectedThread.write(comando);
-                write2(comando);
+                mConnectedThread.write(comando);
             }
         }
-    }
-    public void write2(final String input) {
-
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
-                try {
-                    mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
-                } catch (Exception e) {
-                    //if you cannot write, close the application
-                    Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
-                    finish();
-
-                }                }
-        }).start();
-
-
     }
 
 
@@ -608,7 +542,7 @@ public class MainActivity extends AppCompatActivity implements
             mSession.disconnect();
         }
 
-       // super.onBackPressed();
+        super.onBackPressed();
     }
 
     public void reloadInterface() {
@@ -837,7 +771,8 @@ public class MainActivity extends AppCompatActivity implements
 
     //create new class for connect thread
     private class ConnectedThread extends Thread {
-
+        private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
 
         //creation of the connect thread
         public ConnectedThread(BluetoothSocket socket) {
@@ -869,7 +804,7 @@ public class MainActivity extends AppCompatActivity implements
                     byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
                     try {
                         mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         //if you cannot write, close the application
                         Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
                         finish();
