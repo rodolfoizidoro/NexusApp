@@ -792,36 +792,33 @@ public class MainActivity extends AppCompatActivity implements
 
 
         public void run() {
+            byte[] buffer = new byte[256];
+            int bytes;
+
+//            // Keep looping to listen for received messages
+//            while (true) {
+//                try {
+//                    bytes = mmInStream.read(buffer);        	//read bytes from input buffer
+//                    String readMessage = new String(buffer, 0, bytes);
+//                    // Send the obtained bytes to the UI Activity via handler
+//                   // bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+//                } catch (IOException e) {
+//                    break;
+//                }
+//            }
         }
 
         //write method
-        public void write(final String input) {
+        public void write(String input) {
+            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
+            try {
+                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
+            } catch (IOException e) {
+                //if you cannot write, close the application
+                Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
+                finish();
 
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
-                    try {
-                        mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
-                    } catch (IOException e) {
-                        //if you cannot write, close the application
-                        Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
-                        finish();
-
-                    }                }
-            }).start();
-
-
-//            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
-//            try {
-//                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
-//            } catch (IOException e) {
-//                //if you cannot write, close the application
-//                Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
-//                finish();
-//
-//            }
+            }
         }
 
     }
